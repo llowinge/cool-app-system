@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cool-app-cool-spec1-api-pipeline
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    system: cool-app
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/llowinge/developer-charts
+    targetRevision: HEAD
+    path: api-specification-pipeline
+    helm:
+      values: |
+        domain: llowinge
+        system: cool-app
+        component: cool-spec1
+        groupid: com.redhat.demo.coolapp
+        apicurioRegistry: registry-apicurio-registry.apps.cluster-hfgnt.hfgnt.sandbox448.opentlc.com
+        mockRegistry: microcks-microcks.apps.cluster-hfgnt.hfgnt.sandbox448.opentlc.com
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cool-app-build
+  syncPolicy:
+    automated: 
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=false
+    - RespectIgnoreDifferences=true
+    - ApplyOutOfSyncOnly=true
+    retry:
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 10m
