@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cool-app-cool-app-quarkus-java-pipeline
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    system: cool-app
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/llowinge/developer-charts
+    targetRevision: HEAD
+    path: quarkus-pipeline
+    helm:
+      values: |
+        domain: llowinge
+        system: cool-app
+        component: cool-app-quarkus-java
+        deployment: jvm
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cool-app-build
+  syncPolicy:
+    automated: 
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=false
+    - RespectIgnoreDifferences=true
+    - ApplyOutOfSyncOnly=true
+    retry:
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 10m
